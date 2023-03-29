@@ -1,4 +1,4 @@
-package config
+package setting
 
 const (
 	DEFAULT_PART_SIZE              = 1024 * 1024 * 5 // 5 MB
@@ -8,7 +8,7 @@ const (
 	DEFAULT_SAVE_LOCATION          = "./storage"
 )
 
-type Config struct {
+type Setting struct {
 	Partsize        int64
 	Concurrency     int
 	Maxtries        int
@@ -16,8 +16,8 @@ type Config struct {
 	SaveLocation    string
 }
 
-func Default() Config {
-	return Config{
+func Default() Setting {
+	return Setting{
 		Partsize:        DEFAULT_PART_SIZE,
 		Concurrency:     DEFAULT_CONCURRENCY,
 		Maxtries:        DEFAULT_MAX_TRIES,
