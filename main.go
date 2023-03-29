@@ -32,8 +32,8 @@ func main() {
 
 	file := fs.New(response.Parts(), &setting)
 	downloadjobs := make([]*http.Chunk, response.Parts())
-	for chunk := range downloadjobs {
-		downloadjobs[chunk] = http.Download(response, chunk, &wg, &setting)
+	for part := range downloadjobs {
+		downloadjobs[part] = http.NewChunk(response, part, &wg, &setting)
 	}
 
 	for _, job := range downloadjobs {

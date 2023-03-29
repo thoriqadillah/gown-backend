@@ -22,7 +22,7 @@ type Chunk struct {
 	data  []byte
 }
 
-func Download(res *response, index int, wg *sync.WaitGroup, setting *setting.Setting) *Chunk {
+func NewChunk(res *response, index int, wg *sync.WaitGroup, setting *setting.Setting) *Chunk {
 	// get the range part that we want to download
 	totalpart := int64(res.totalpart)
 	partsize := res.size / totalpart
@@ -53,9 +53,9 @@ func (c *Chunk) download() error {
 	part := fmt.Sprintf("bytes=%d-%d", c.start, c.end)
 
 	if c.size == -1 {
-		log.Printf("Downloading part %d with size unknown", c.index+1)
+		log.Printf("Downloading chunk %d with size unknown", c.index+1)
 	} else {
-		log.Printf("Downloading part %d from %d to %d", c.index+1, c.start, c.end)
+		log.Printf("Downloading chunk %d from %d to %d", c.index+1, c.start, c.end)
 	}
 
 	req, err := http.NewRequest("GET", c.url, nil)
@@ -64,6 +64,7 @@ func (c *Chunk) download() error {
 	}
 
 	start := time.Now()
+
 	req.Header.Add("Range", part)
 	res, err := httpclient.Do(req)
 	if err != nil {
@@ -78,12 +79,11 @@ func (c *Chunk) download() error {
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("Downloading done for worker with id %d in %v s\n", c.index, elapsed.Seconds())
+	log.Printf("Chunk %d downloaded in %v s\n", c.index+1, elapsed.Seconds())
 
 	return nil
 }
 
-// TODO: handle wether to download file entirely or split
 func (c *Chunk) Execute() error {
 	var err error
 

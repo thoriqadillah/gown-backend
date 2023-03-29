@@ -17,7 +17,9 @@ type response struct {
 	totalpart   int
 }
 
-func Fetch(url string, conf *setting.Setting) (*response, error) {
+func Fetch(url string, setting *setting.Setting) (*response, error) {
+	log.Printf("Fetching file data")
+
 	// get the redirected url
 	res, err := http.Head(url)
 	if err != nil {
@@ -47,19 +49,22 @@ func Fetch(url string, conf *setting.Setting) (*response, error) {
 
 	split = strings.Split(url, "/")
 	filename := split[len(split)-1]
-	filename = strings.Split(filename, "?")[0] + contentType
+	filename = strings.Split(filename, "?")[0]
+	if filename == "" {
+		filename = "file" + contentType
+	} else {
+		filename += contentType
+	}
 
 	// check if the file support cansplit download
 	cansplit := res.Header.Get("Accept-Ranges") == "bytes"
-	if !cansplit {
-		log.Println("Does not support split download. Downloading the file entirely")
-	}
 
-	totalpart := 1
-	if cansplit {
-		totalpart = int(size / conf.Partsize)
+	totalpart := int(size / setting.Partsize)
+	if size == -1 || !cansplit {
+		totalpart = 1
+		log.Println("File does not support download in chunks. Downloading the file entirely")
 	}
-	conf.Concurrency = totalpart
+	setting.Concurrency = totalpart
 
 	response := &response{
 		url:         url,
