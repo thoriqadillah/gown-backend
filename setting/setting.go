@@ -5,7 +5,7 @@ const (
 	DEFAULT_CONCURRENCY            = 10
 	DEFAULT_MAX_TRIES              = 3
 	DEFAULT_SIMMULATANOUS_DOWNLOAD = 1
-	DEFAULT_SAVE_LOCATION          = "./storage"
+	DEFAULT_SAVE_LOCATION          = "./tmp"
 )
 
 type Setting struct {
