@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/thoriqadillah/gown/config"
 )
 
 type response struct {
@@ -13,9 +15,10 @@ type response struct {
 	contentType string
 	cansplit    bool
 	totalpart   int
+	config.Config
 }
 
-func Fetch(url string, splitnum int) (*response, error) {
+func Fetch(url string, conf *config.Config) (*response, error) {
 	// get the redirected url
 	res, err := http.Head(url)
 	if err != nil {
@@ -25,7 +28,7 @@ func Fetch(url string, splitnum int) (*response, error) {
 
 	newurl := res.Request.URL.String()
 	if url != newurl {
-		log.Printf("Following link to %s", newurl[:20]+"...")
+		log.Printf("Following link to %s", newurl[:50]+"...")
 	}
 
 	url = newurl
@@ -40,9 +43,12 @@ func Fetch(url string, splitnum int) (*response, error) {
 	size := res.ContentLength
 
 	contentType := res.Header.Get("Content-Type")
+	split := strings.Split(contentType, "/")
+	contentType = "." + split[len(split)-1]
 
-	split := strings.Split(url, "/")
+	split = strings.Split(url, "/")
 	filename := split[len(split)-1]
+	filename = strings.Split(filename, "?")[0] + contentType
 
 	// check if the file support cansplit download
 	cansplit := res.Header.Get("Accept-Ranges") == "bytes"
@@ -50,11 +56,11 @@ func Fetch(url string, splitnum int) (*response, error) {
 		log.Println("Does not support split download. Downloading the file entirely")
 	}
 
-	// total part is 8 if cansplit is true
 	totalpart := 1
 	if cansplit {
-		totalpart = splitnum
+		totalpart = int(size / conf.Partsize)
 	}
+	conf.Concurrency = totalpart
 
 	response := &response{
 		url:         url,
@@ -72,17 +78,6 @@ func (r *response) Parts() int {
 	return r.totalpart
 }
 
-func (r *response) Size() int64 {
-	return r.size
-}
-
 func (r *response) Filename() string {
 	return r.filename
-}
-
-func (r *response) Type() string {
-	split := strings.Split(r.contentType, "/")
-	contentType := split[len(split)-1]
-
-	return "." + contentType
 }

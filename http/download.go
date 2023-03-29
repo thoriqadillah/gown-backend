@@ -8,17 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/thoriqadillah/gown/config"
 	"github.com/thoriqadillah/gown/worker"
 )
 
-type Partition struct {
-	wg       *sync.WaitGroup
-	url      string
-	callback func(data []byte, index int)
-	chunk
-}
-
-type chunk struct {
+type Chunk struct {
+	*response
+	wg *sync.WaitGroup
+	*config.Config
 	index int
 	start int64
 	end   int64
@@ -26,7 +23,7 @@ type chunk struct {
 	Data  []byte
 }
 
-func Download(res *response, index int, wg *sync.WaitGroup, callback func(data []byte, index int)) worker.Job {
+func Download(res *response, index int, wg *sync.WaitGroup, config *config.Config) worker.Job {
 	// get the range part that we want to download
 	totalpart := int64(res.totalpart)
 	partsize := res.size / totalpart
@@ -38,22 +35,24 @@ func Download(res *response, index int, wg *sync.WaitGroup, callback func(data [
 		end = res.size
 	}
 
-	chuck := chunk{
-		index: index,
-		start: start,
-		end:   end,
-		size:  partsize,
-	}
-
-	return &Partition{
+	return &Chunk{
+		response: res,
 		wg:       wg,
-		url:      res.url,
-		callback: callback,
-		chunk:    chuck,
+		Config:   config,
+		index:    index,
+		start:    start,
+		end:      end,
+		size:     partsize,
 	}
 }
 
-func (d *Partition) Execute() error {
+func (d *Chunk) Struct() interface{} {
+	return d
+}
+
+// TODO: implement retry
+// TODO: handle wether to download file entirely or split
+func (d *Chunk) Execute() error {
 	defer d.wg.Done()
 
 	httpclient := &http.Client{}
@@ -80,24 +79,17 @@ func (d *Partition) Execute() error {
 
 	defer res.Body.Close()
 
-	elapsed := time.Since(start)
-	log.Printf("Downloading done for worker with id %d in %v s\n", d.index, elapsed.Seconds())
-
-	log.Printf("Reading from downloaded part %d", d.index+1)
-	data, err := io.ReadAll(res.Body)
+	d.Data, err = io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
 
-	// callback to combine the file
-	d.callback(data, d.index)
-
-	elapsed = time.Since(start)
-	log.Printf("Saving the response done for worker with id %d in %v s\n", d.index, elapsed.Seconds())
+	elapsed := time.Since(start)
+	log.Printf("Downloading done for worker with id %d in %v s\n", d.index, elapsed.Seconds())
 	return nil
 }
 
-func (d *Partition) HandleError(err error) {
+func (d *Chunk) HandleError(err error) {
 	// TODO: handle error
-	log.Println(err)
+	log.Printf("Error downloading the file: %v", err)
 }
