@@ -4,18 +4,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/thoriqadillah/gown/config"
+	"github.com/thoriqadillah/gown/setting"
 )
 
 type File struct {
 	Data [][]byte
-	*config.Config
+	*setting.Setting
 }
 
-func New(size int, config *config.Config) *File {
+func New(size int, setting *setting.Setting) *File {
 	return &File{
-		Data:   make([][]byte, size),
-		Config: config,
+		Data:    make([][]byte, size),
+		Setting: setting,
 	}
 }
 

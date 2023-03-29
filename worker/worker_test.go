@@ -63,10 +63,6 @@ func newTestJob(executeFunc func() error, shouldErr bool, wg *sync.WaitGroup) *t
 	}
 }
 
-func (t *testJob) Struct() interface{} {
-	return t
-}
-
 func (t *testJob) Execute() error {
 	if t.wg != nil {
 		defer t.wg.Done()

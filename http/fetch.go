@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/thoriqadillah/gown/config"
+	"github.com/thoriqadillah/gown/setting"
 )
 
 type response struct {
@@ -15,10 +15,9 @@ type response struct {
 	contentType string
 	cansplit    bool
 	totalpart   int
-	config.Config
 }
 
-func Fetch(url string, conf *config.Config) (*response, error) {
+func Fetch(url string, conf *setting.Setting) (*response, error) {
 	// get the redirected url
 	res, err := http.Head(url)
 	if err != nil {
