@@ -27,7 +27,7 @@ flutter --version
 
 4. Install the required dependency for desktop app development
 ```bash
-sudo dnf install clang cmake ninja-build pkgconf gtk3 gtk3-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel
+sudo dnf install clang cmake ninja-build pkgconf gtk3 gtk3-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel  libXxf86vm-devel
 ```
 5. Install [Hover](https://hover.build)
 ```bash
