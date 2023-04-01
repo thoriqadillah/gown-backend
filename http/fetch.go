@@ -2,6 +2,7 @@ package http
 
 import (
 	"log"
+	"math"
 	"net/http"
 	"strings"
 
@@ -15,6 +16,7 @@ type response struct {
 	contentType string
 	cansplit    bool
 	totalpart   int
+	*setting.Setting
 }
 
 func Fetch(url string, setting *setting.Setting) (*response, error) {
@@ -59,11 +61,12 @@ func Fetch(url string, setting *setting.Setting) (*response, error) {
 	// check if the file support cansplit download
 	cansplit := res.Header.Get("Accept-Ranges") == "bytes"
 
-	totalpart := int(size / setting.Partsize)
+	totalpart := dynamicPartition(size, setting.Partsize)
 	if size == -1 || !cansplit {
 		totalpart = 1
 		log.Println("File does not support download in chunks. Downloading the file entirely")
 	}
+
 	setting.Concurrency = totalpart
 
 	response := &response{
@@ -73,9 +76,20 @@ func Fetch(url string, setting *setting.Setting) (*response, error) {
 		contentType: contentType,
 		cansplit:    cansplit,
 		totalpart:   totalpart,
+		Setting:     setting,
 	}
 
 	return response, nil
+}
+
+func dynamicPartition(size int64, defaultParitionSize int64) int {
+	num := math.Log10(float64(size / (1024 * 1024)))
+	partsize := defaultParitionSize
+	for i := 0; i < int(num); i++ {
+		partsize *= 3
+	}
+
+	return int(size / partsize)
 }
 
 func (r *response) Parts() int {

@@ -7,14 +7,11 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/thoriqadillah/gown/setting"
 )
 
 type Chunk struct {
 	*response
-	wg *sync.WaitGroup
-	*setting.Setting
+	wg    *sync.WaitGroup
 	index int
 	start int64
 	end   int64
@@ -22,7 +19,7 @@ type Chunk struct {
 	data  []byte
 }
 
-func NewChunk(res *response, index int, wg *sync.WaitGroup, setting *setting.Setting) *Chunk {
+func NewChunk(res *response, index int, wg *sync.WaitGroup) *Chunk {
 	// get the range part that we want to download
 	totalpart := int64(res.totalpart)
 	partsize := res.size / totalpart
@@ -37,7 +34,6 @@ func NewChunk(res *response, index int, wg *sync.WaitGroup, setting *setting.Set
 	return &Chunk{
 		response: res,
 		wg:       wg,
-		Setting:  setting,
 		index:    index,
 		start:    start,
 		end:      end,
@@ -55,7 +51,7 @@ func (c *Chunk) download() error {
 	if c.size == -1 {
 		log.Printf("Downloading chunk %d with size unknown", c.index+1)
 	} else {
-		log.Printf("Downloading chunk %d from %d to %d", c.index+1, c.start, c.end)
+		log.Printf("Downloading chunk %d from %d to %d (~%d MB)", c.index+1, c.start, c.end, (c.end-c.start)/(1024*1024))
 	}
 
 	req, err := http.NewRequest("GET", c.url, nil)

@@ -1,11 +1,12 @@
 package setting
 
 const (
-	DEFAULT_PART_SIZE              = 1024 * 1024 * 5 // 5 MB
-	DEFAULT_CONCURRENCY            = 10
-	DEFAULT_MAX_TRIES              = 3
-	DEFAULT_SIMMULATANOUS_DOWNLOAD = 1
-	DEFAULT_SAVE_LOCATION          = "./tmp"
+	mb                                   = 1024 * 1024
+	DEFAULT_PART_SIZE              int64 = 5 * mb // 5 MB
+	DEFAULT_CONCURRENCY                  = 10
+	DEFAULT_MAX_TRIES                    = 3
+	DEFAULT_SIMMULATANOUS_DOWNLOAD       = 1
+	DEFAULT_SAVE_LOCATION                = "./tmp"
 )
 
 type Setting struct {
@@ -16,7 +17,7 @@ type Setting struct {
 	SaveLocation    string
 }
 
-func Default() Setting {
+func New() Setting {
 	return Setting{
 		Partsize:        DEFAULT_PART_SIZE,
 		Concurrency:     DEFAULT_CONCURRENCY,
