@@ -11,7 +11,6 @@ import (
 
 type response struct {
 	url         string
-	filename    string
 	size        int64
 	contentType string
 	cansplit    bool
@@ -43,23 +42,11 @@ func Fetch(url string, setting *setting.Setting) (*response, error) {
 		return nil, err
 	}
 
-	size := res.ContentLength
-
 	contentType := res.Header.Get("Content-Type")
-	split := strings.Split(contentType, "/")
-	contentType = "." + split[len(split)-1]
-
-	split = strings.Split(url, "/")
-	filename := split[len(split)-1]
-	filename = strings.Split(filename, "?")[0]
-	if filename == "" {
-		filename = "file" + contentType
-	} else {
-		filename += contentType
-	}
 
 	// check if the file support cansplit download
 	cansplit := res.Header.Get("Accept-Ranges") == "bytes"
+	size := res.ContentLength
 
 	totalpart := dynamicPartition(size, setting.Partsize)
 	if size == -1 || !cansplit {
@@ -71,7 +58,6 @@ func Fetch(url string, setting *setting.Setting) (*response, error) {
 
 	response := &response{
 		url:         url,
-		filename:    filename,
 		size:        size,
 		contentType: contentType,
 		cansplit:    cansplit,
@@ -86,7 +72,7 @@ func dynamicPartition(size int64, defaultParitionSize int64) int {
 	num := math.Log10(float64(size / (1024 * 1024)))
 	partsize := defaultParitionSize
 	for i := 0; i < int(num); i++ {
-		partsize *= 3
+		partsize *= 3 // 3 is just author's self configured number
 	}
 
 	return int(size / partsize)
@@ -97,5 +83,20 @@ func (r *response) Parts() int {
 }
 
 func (r *response) Filename() string {
-	return r.filename
+	split := strings.Split(r.contentType, "/")
+	type_ := "." + split[len(split)-1]
+
+	split = strings.Split(r.url, "/")
+	filename := split[len(split)-1]
+	filename = strings.Split(filename, "?")[0]
+	if filename == "" {
+		return "file" + type_
+	}
+
+	split = strings.Split(filename, ".")
+	if len(split) != 0 {
+		return filename
+	}
+
+	return filename + type_
 }
