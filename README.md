@@ -31,7 +31,8 @@ sudo dnf install clang cmake ninja-build pkgconf gtk3 gtk3-devel libX11-devel li
 ```
 5. Install [Hover](https://hover.build)
 ```bash
-GO111MODULE=on go get -u -a github.com/go-flutter-desktop/hover@latest
+# on home
+GO111MODULE=on go install github.com/go-flutter-desktop/hover@latest
 ```
 6. Or just run `go mod tidy`
 
